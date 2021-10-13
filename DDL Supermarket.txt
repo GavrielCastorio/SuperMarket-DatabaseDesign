@@ -1,0 +1,150 @@
+create table Itemcategory(
+categoryid char(10),
+itemCategoty varchar(255) not null,
+constraint PK_categoryid primary key(categoryid),
+constraint check_catid check(regexp_like(categoryid,'^CTID[0123456789]{6}$'))
+);
+
+create table Item(
+itemid char(10),
+categoryid char(10) not null,
+itemname varchar(255) not null,
+itemprice Integer not null,
+initialStock integer not null,
+constraint pk_itemid primary key(itemid),
+constraint fk_catid foreign key(categoryid) references itemcategory(categoryid) on delete cascade,
+constraint check_itemid check(regexp_like(categoryid,'^ITID[0123456789]{6}$')),
+constraint U_itemname unique(itemname));
+
+
+create table supplier(
+supplierid char(10),
+suppliername varchar(255) not null,
+supplierphone varchar(255) ,
+constraint Pk_supplier primary key(supplierid),
+constraint c_supplierid check(regexp_like(supplierid,'^SPID[0123456789]{6}$')),
+constraint u_supplierphone unique(supplierphone),
+constraint c_supplierphone check(regexp_like(supplierphone,'[0123456789]{12}'))
+);
+
+
+create table branch(
+branchid char(10) ,
+branchadress varchar(255) not null,
+telephonenumber varchar(255),
+constraint pk_branchid primary key(branchid),
+constraint c_branchid check(regexp_like(branchid,'^BRID[0123456789]{6}$')),
+constraint u_telephonenumber unique(telephonenumber),
+constraint c_telephonenumber check(regexp_like(telephonenumber,'[0123456789]{12}'))
+);
+
+create table stafftype(
+stafftypeid char(10),
+stafftypename varchar(255) not null,
+constraint pk_stafftypeid primary key(stafftypeid),
+constraint c_stafftypeid check(regexp_like(stafftypeid,'^STID[0123456789]{6}$'))
+);
+
+create table staff(
+staffid char(10),
+stafftypeid char(10) not null,
+managerid char(10) not null,
+branchid char(10) not null,
+staffname varchar(255) not null,
+staffemail varchar(255) ,
+staffphone varchar(16) ,
+staffdob date not  null,
+staffsalary integer not null,
+constraint pk_staffid primary key(staffid),
+constraint fk_stafftypeid foreign key(stafftypeid) references stafftype(stafftypeid) on delete cascade,
+constraint fk_managerid foreign key(stafftypeid) references staff(staffid) on delete cascade,
+constraint fk_branchid foreign key(branchid) references branch(branchid) on delete cascade,
+constraint c_staffid check(regexp_like(staffid,'^STID[0123456789]{6}$')),
+constraint u_staffphone unique(staffphone),
+constraint u_staffemail unique(staffemail),
+constraint c_staffemail check(regexp_like(staffemail,'^[A-Z]{1}[a-z A-Z 0-9]+(@gmail.com|@yahoo.com)$')),
+constraint c_staffphone check(regexp_like(staffphone,'^[0123456789]{12}$'))
+);
+
+create table payroll(
+payrollid char(10),
+staffid char(10) not null,
+salarydate date NOT NULL,
+salaryamount integer NOT NULL,
+constraint pk_payrollid primary key(payrollid),
+constraint fk_staffid foreign key(staffid) references staff(staffid) on delete cascade,
+constraint c_payrollid check(regexp_like(payrollid,'PYID[0123456789]{6}'))
+);
+
+create table supplytransaction(
+purchaseid char(10),
+supplierid char(10) not null,
+staffid char(10)not null,
+branchid char(10) not null,
+purchasedate date not null ,
+constraint pk_purchaseid primary key (purchaseid) ,
+constraint fk_supplierid_supplytransaction foreign key (supplierid) references supplier(supplierid) on delete cascade,
+constraint fk_staffid_supplytransaction foreign key (staffid) references staff(staffid) on delete cascade,
+constraint fk_branchid_supplytransaction foreign key (branchid) references branch(branchid) on delete cascade,
+constraint c_purchaseid check(regexp_like(purchaseid,'PRID[0123456789]{6}'))
+);
+
+create table detailsupplytransaction
+(
+purchaseid char(10),
+itemid char(10),
+quantity integer not null,
+unitprice integer not null,
+constraint pk_purchaseid_itemid primary key(purchaseid,itemid),
+constraint fk_purchaseid_detailsupplytransaction foreign key(purchaseid) references supplytransaction(purchaseid) on delete cascade,
+constraint fk_itemid_detailsupplytransaction foreign key(itemid) references item(itemid)
+);
+
+create table levelmember(
+levelid integer,
+levelname char(16) not null,
+startpoint integer not null,
+endpoint integer not null,
+discount float,
+constraint pk_levelid primary key(levelid),
+constraint c_levelname check(levelname in('Bronze,Silver,Gold,Platinum,Diamond'))
+);
+
+create table members(
+memberid char(10),
+levelid integer not null,
+membername varchar(255) not null,
+memberphone varchar(16) ,
+NIK char(16) not null,
+registrationdate date not null,
+constraint pk_memberid primary key(memberid),
+constraint fk_levelid foreign key(levelid) references levelmember(levelid) on delete cascade,
+constraint c_memberid check(regexp_like(memberid,'^MMID[0912837465]{6}$')),
+constraint u_memberphone unique(memberphone),
+constraint c_NIK check(regexp_like(NIK,'[0192837465]{16}'))
+);
+
+create table "transaction"(
+transactionid char(10),
+memberid char(10),
+staffid char(10) not null,
+branchid char(10) not null,
+transactiondate date not null,
+constraint pk_transactionid primary key(transactionid),
+constraint fk_memberid foreign key(memberid) references members(memberid) on delete cascade,
+constraint fk_staffid_transaction foreign key(staffid) references staff(staffid) on delete cascade,
+constraint fk_branchid_transaction foreign key(branchid) references branch(branchid) on delete cascade,
+constraint c_transactionid check(regexp_like(transactionid,'TRID[0123456789]{6}'))
+);
+
+create table detailtransaction
+(
+transactionid char(10),
+itemid char(10),
+quantity integer not null,
+unitprice integer not null,
+constraint pk_transactionid_itemid primary key(transactionid,itemid),
+constraint fk_transactionid_detailtransaction foreign key(transactionid) references "transaction"(transactionid) on delete cascade,
+constraint fk_itemid_detailtransaction foreign key(itemid) references item(itemid)
+);
+
